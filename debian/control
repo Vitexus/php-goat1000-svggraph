@@ -1,0 +1,20 @@
+Source: php-goat1000-svggraph
+Section: php
+Priority: optional
+Maintainer: Vítězslav Dvořák <info@vitexsoftware.cz>
+Build-Depends:
+ debhelper-compat (= 13)
+Standards-Version: 4.7.0
+Homepage: https://www.goat1000.com/svggraph.php
+Rules-Requires-Root: no
+Vcs-Git: https://salsa.debian.org/debian/php-goat1000-svggraph.git
+Vcs-Browser: https://salsa.debian.org/debian/php-goat1000-svggraph
+
+Package: php-goat1000-svggraph
+Architecture: all
+Multi-Arch: foreign
+Depends:
+ ${misc:Depends},
+ php-json
+Description: PHP library for creating SVG graphs
+ SVGGraph is a PHP library for creating a wide variety of graphs and charts in SVG format. It supports many graph types, customisation options, and is suitable for dynamic data visualisation in web applications.

@@ -1,0 +1,5 @@
+*.php     /usr/share/php/SvgGraph
+*.ini     /usr/share/php/SvgGraph
+fonts     /usr/share/php/SvgGraph
+templates /usr/share/php/SvgGraph
+composer.json /usr/share/php/SvgGraph
