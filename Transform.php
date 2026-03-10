@@ -1,102 +1,125 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2019 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
 /**
- * Class for SVG transforms
+ * Class for SVG transforms.
  */
-class Transform {
-  private $transforms = [];
-  
-  /**
-   * Output for SVG values
-   */
-  public function __toString()
-  {
-    $str = '';
-    foreach($this->transforms as $xform) {
-      $str .= $xform[0] . '(';
-      $str .= implode(' ', $xform[1]);
-      $str .= ')';
+class Transform implements \Stringable
+{
+    private $transforms = [];
+
+    /**
+     * Output for SVG values.
+     */
+    public function __toString()
+    {
+        $str = '';
+
+        foreach ($this->transforms as $xform) {
+            $str .= $xform[0].'(';
+            $str .= implode(' ', $xform[1]);
+            $str .= ')';
+        }
+
+        return $str;
     }
-    return $str;
-  }
 
-  /**
-   * Adds another transform to this one
-   */
-  public function add($xform)
-  {
-    if(!is_object($xform) || get_class($xform) !== 'Goat1000\\SVGGraph\\Transform')
-      throw new \InvalidArgumentException('Argument is not a Transform');
+    /**
+     * Adds another transform to this one.
+     *
+     * @param mixed $xform
+     */
+    public function add($xform): void
+    {
+        if (!\is_object($xform) || $xform::class !== 'Goat1000\\SVGGraph\\Transform') {
+            throw new \InvalidArgumentException('Argument is not a Transform');
+        }
 
-    $this->transforms = array_merge($this->transforms, $xform->transforms);
-  }
-
-  /**
-   * Translate by $x, $y
-   */
-  public function translate($x, $y)
-  {
-    $this->transforms[] = ['translate', [new Number($x), new Number($y)]];
-  }
-
-  /**
-   * Scale by $x, or by $x and $y
-   */
-  public function scale($x, $y = null)
-  {
-    $args = [new Number($x)];
-    if($y !== null)
-      $args[] = new Number($y);
-    $this->transforms[] = ['scale', $args];
-  }
-
-  /**
-   * Rotate by $a degrees, around point $x, $y
-   */
-  public function rotate($a, $x = null, $y = null)
-  {
-    $args = [new Number($a)];
-    if($x !== null && $y !== null) {
-      $args[] = new Number($x);
-      $args[] = new Number($y);
+        $this->transforms = array_merge($this->transforms, $xform->transforms);
     }
-    $this->transforms[] = ['rotate', $args];
-  }
 
-  /**
-   * Skew by $a degrees along X-axis
-   */
-  public function skewX($a)
-  {
-    $this->transforms[] = ['skewX', [new Number($a)]];
-  }
+    /**
+     * Translate by $x, $y.
+     *
+     * @param mixed $x
+     * @param mixed $y
+     */
+    public function translate($x, $y): void
+    {
+        $this->transforms[] = ['translate', [new Number($x), new Number($y)]];
+    }
 
-  /**
-   * Skew by $a degrees along Y-axis
-   */
-  public function skewY($a)
-  {
-    $this->transforms[] = ['skewY', [new Number($a)]];
-  }
+    /**
+     * Scale by $x, or by $x and $y.
+     *
+     * @param mixed      $x
+     * @param null|mixed $y
+     */
+    public function scale($x, $y = null): void
+    {
+        $args = [new Number($x)];
+
+        if ($y !== null) {
+            $args[] = new Number($y);
+        }
+
+        $this->transforms[] = ['scale', $args];
+    }
+
+    /**
+     * Rotate by $a degrees, around point $x, $y.
+     *
+     * @param mixed      $a
+     * @param null|mixed $x
+     * @param null|mixed $y
+     */
+    public function rotate($a, $x = null, $y = null): void
+    {
+        $args = [new Number($a)];
+
+        if ($x !== null && $y !== null) {
+            $args[] = new Number($x);
+            $args[] = new Number($y);
+        }
+
+        $this->transforms[] = ['rotate', $args];
+    }
+
+    /**
+     * Skew by $a degrees along X-axis.
+     *
+     * @param mixed $a
+     */
+    public function skewX($a): void
+    {
+        $this->transforms[] = ['skewX', [new Number($a)]];
+    }
+
+    /**
+     * Skew by $a degrees along Y-axis.
+     *
+     * @param mixed $a
+     */
+    public function skewY($a): void
+    {
+        $this->transforms[] = ['skewY', [new Number($a)]];
+    }
 }

@@ -1,108 +1,151 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2019 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
-trait FloatingBarTrait {
+trait FloatingBarTrait
+{
+    private $min_value;
+    private $max_value;
 
-  private $min_value = null;
-  private $max_value = null;
+    /**
+     * Returns the maximum bar end.
+     */
+    public function getMaxValue()
+    {
+        if ($this->max_value !== null) {
+            return $this->max_value;
+        }
 
-  /**
-   * Returns an array with x, y, width and height set
-   */
-  protected function barDimensions($item, $index, $start, $axis, $dataset)
-  {
-    $bar = [];
-    $bar_x = $this->barX($item, $index, $bar, $axis, $dataset);
-    if($bar_x === null)
-      return [];
+        $max = null;
 
-    $start = $item->value;
-    $value = $item->end - $start;
-    $y_pos = $this->barY($value, $bar, $start, $axis);
-    if($y_pos === null)
-      return [];
-    return $bar;
-  }
+        foreach ($this->values[0] as $item) {
+            $s = $item->value;
+            $e = $item->end;
 
-  /**
-   * Override to replace value
-   */
-  protected function setTooltip(&$element, &$item, $dataset, $key, $value = null,
-    $duplicate = false)
-  {
-    $value = $item->end - $item->value;
-    return parent::setTooltip($element, $item, $dataset, $key, $value, $duplicate);
-  }
+            if ($s === null || $e === null) {
+                continue;
+            }
 
-  /**
-   * Returns the maximum bar end
-   */
-  public function getMaxValue()
-  {
-    if($this->max_value !== null)
-      return $this->max_value;
-    $max = null;
-    foreach($this->values[0] as $item) {
-      $s = $item->value;
-      $e = $item->end;
-      if($s === null || $e === null)
-        continue;
-      $m = max($s, $e);
-      if($max === null || $m > $max)
-        $max = $m;
+            $m = max($s, $e);
+
+            if ($max === null || $m > $max) {
+                $max = $m;
+            }
+        }
+
+        return $this->max_value = $max;
     }
-    return ($this->max_value = $max);
-  }
 
-  /**
-   * Returns the minimum bar end
-   */
-  public function getMinValue()
-  {
-    if($this->min_value !== null)
-      return $this->min_value;
-    $min = null;
-    foreach($this->values[0] as $item) {
-      $s = $item->value;
-      $e = $item->end;
-      if($s === null || $e === null)
-        continue;
-      $m = min($s, $e);
-      if($min === null || $m < $min)
-        $min = $m;
+    /**
+     * Returns the minimum bar end.
+     */
+    public function getMinValue()
+    {
+        if ($this->min_value !== null) {
+            return $this->min_value;
+        }
+
+        $min = null;
+
+        foreach ($this->values[0] as $item) {
+            $s = $item->value;
+            $e = $item->end;
+
+            if ($s === null || $e === null) {
+                continue;
+            }
+
+            $m = min($s, $e);
+
+            if ($min === null || $m < $min) {
+                $min = $m;
+            }
+        }
+
+        return $this->min_value = $min;
     }
-    return ($this->min_value = $min);
-  }
 
-  /**
-   * Returns TRUE if the item is visible on the graph
-   */
-  public function isVisible($item, $dataset = 0)
-  {
-    if($item->value === null || $item->end === null)
-      return false;
-    return ($item->end - $item->value != 0);
-  }
+    /**
+     * Returns TRUE if the item is visible on the graph.
+     *
+     * @param mixed $item
+     * @param mixed $dataset
+     */
+    public function isVisible($item, $dataset = 0)
+    {
+        if ($item->value === null || $item->end === null) {
+            return false;
+        }
 
+        return $item->end - $item->value !== 0;
+    }
+
+    /**
+     * Returns an array with x, y, width and height set.
+     *
+     * @param mixed $item
+     * @param mixed $index
+     * @param mixed $start
+     * @param mixed $axis
+     * @param mixed $dataset
+     */
+    protected function barDimensions($item, $index, $start, $axis, $dataset)
+    {
+        $bar = [];
+        $bar_x = $this->barX($item, $index, $bar, $axis, $dataset);
+
+        if ($bar_x === null) {
+            return [];
+        }
+
+        $start = $item->value;
+        $value = $item->end - $start;
+        $y_pos = $this->barY($value, $bar, $start, $axis);
+
+        if ($y_pos === null) {
+            return [];
+        }
+
+        return $bar;
+    }
+
+    /**
+     * Override to replace value.
+     *
+     * @param mixed      $element
+     * @param mixed      $item
+     * @param mixed      $dataset
+     * @param mixed      $key
+     * @param null|mixed $value
+     * @param mixed      $duplicate
+     */
+    protected function setTooltip(
+        &$element,
+        &$item,
+        $dataset,
+        $key,
+        $value = null,
+        $duplicate = false,
+    ) {
+        $value = $item->end - $item->value;
+
+        return parent::setTooltip($element, $item, $dataset, $key, $value, $duplicate);
+    }
 }
-

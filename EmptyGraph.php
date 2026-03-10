@@ -1,56 +1,55 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2019-2020 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
-class EmptyGraph extends Graph {
+class EmptyGraph extends Graph
+{
+    /**
+     * Does nothing, no colours to set up.
+     */
+    protected function setup(): void
+    {
+    }
 
-  /**
-   * Does nothing, no colours to set up
-   */
-  protected function setup()
-  {
-  }
+    /**
+     * Ignore values, not used on empty graph.
+     *
+     * @param mixed $values
+     */
+    public function values($values): void
+    {
+    }
 
-  /**
-   * Draws an empty graph
-   */
-  protected function draw()
-  {
-    // maybe not completely empty
-    return $this->underShapes() . $this->overShapes();
-  }
+    /**
+     * Draws an empty graph.
+     */
+    protected function draw()
+    {
+        // maybe not completely empty
+        return $this->underShapes().$this->overShapes();
+    }
 
-  /**
-   * Ignore values, not used on empty graph
-   */
-  public function values($values)
-  {
-  }
-
-  /**
-   * Drawing nothing, so check nothing
-   */
-  protected function checkValues()
-  {
-  }
+    /**
+     * Drawing nothing, so check nothing.
+     */
+    protected function checkValues(): void
+    {
+    }
 }
-

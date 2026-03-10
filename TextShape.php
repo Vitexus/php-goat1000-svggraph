@@ -1,64 +1,70 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2021-2023 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
-class TextShape extends Shape {
-  protected $element = 'text';
-  protected $required = ['text','x','y'];
-  protected $transform_pairs = [ ['x', 'y'] ];
+class TextShape extends Shape
+{
+    protected $element = 'text';
+    protected $required = ['text', 'x', 'y'];
+    protected $transform_pairs = [['x', 'y']];
 
-  /**
-   * Override default attributes from Shape
-   */
-  protected $attrs = [
-    'fill' => '#000',
-    'font_size' => 14,
-    'font' => 'Arial',
-  ];
+    /**
+     * Override default attributes from Shape.
+     */
+    protected $attrs = [
+        'fill' => '#000',
+        'font_size' => 14,
+        'font' => 'Arial',
+    ];
 
-  /**
-   * Override to draw text element
-   */
-  protected function drawElement(&$graph, &$attributes)
-  {
-    $content = $attributes['text'];
-    $font = $attributes['font'];
-    $attributes['font-size'] = Number::units($attributes['font-size']);
-    $spacing = isset($attributes['line-spacing']) ?
-      Number::units($attributes['line-spacing']) : $attributes['font-size'];
-    $align = isset($attributes['text-align']) ? $attributes['text-align'] : '';
+    /**
+     * Override to draw text element.
+     *
+     * @param mixed $graph
+     * @param mixed $attributes
+     */
+    protected function drawElement(&$graph, &$attributes)
+    {
+        $content = $attributes['text'];
+        $font = $attributes['font'];
+        $attributes['font-size'] = Number::units($attributes['font-size']);
+        $spacing = isset($attributes['line-spacing']) ?
+          Number::units($attributes['line-spacing']) : $attributes['font-size'];
+        $align = $attributes['text-align'] ?? '';
 
-    // remove SVGGraph's shape options
-    $unset_list = ['text', 'font', 'line-spacing', 'text-align'];
-    foreach($unset_list as $a)
-      unset($attributes[$a]);
+        // remove SVGGraph's shape options
+        $unset_list = ['text', 'font', 'line-spacing', 'text-align'];
 
-    $t = new Text($graph, $font);
-    $align_map = ['right' => 'end', 'centre' => 'middle'];
-    if(isset($align_map[$align]))
-      $attributes['text-anchor'] = $align_map[$align];
-    $attributes['font-family'] = $font;
+        foreach ($unset_list as $a) {
+            unset($attributes[$a]);
+        }
 
-    return $t->text($content, $spacing, $attributes);
-  }
+        $t = new Text($graph, $font);
+        $align_map = ['right' => 'end', 'centre' => 'middle'];
+
+        if (isset($align_map[$align])) {
+            $attributes['text-anchor'] = $align_map[$align];
+        }
+
+        $attributes['font-family'] = $font;
+
+        return $t->text($content, $spacing, $attributes);
+    }
 }
-

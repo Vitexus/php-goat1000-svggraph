@@ -1,122 +1,153 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2021-2022 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
 /**
- * Class for axis with specific tick marks
+ * Class for axis with specific tick marks.
  */
-class AxisFixedTicks extends Axis {
+class AxisFixedTicks extends Axis
+{
+    protected $ticks;
+    protected $unit_length = 0;
 
-  protected $ticks;
-  protected $unit_length = 0;
+    public function __construct(
+        $length,
+        $max,
+        $min,
+        $ticks,
+        $units_before,
+        $units_after,
+        $decimal_digits,
+        $label_callback,
+        $values,
+    ) {
+        sort($ticks);
+        $this->ticks = [];
 
-  public function __construct($length, $max, $min, $ticks, $units_before,
-    $units_after, $decimal_digits, $label_callback, $values)
-  {
-    sort($ticks);
-    $this->ticks = [];
+        // only keep the ticks that are inside the axis bounds
+        foreach ($ticks as $t) {
+            if ($t >= $min && $t <= $max) {
+                $this->ticks[] = $t;
+            }
+        }
 
-    // only keep the ticks that are inside the axis bounds
-    foreach($ticks as $t) {
-      if($t >= $min && $t <= $max)
-        $this->ticks[] = $t;
+        if (\count($this->ticks) < 1) {
+            throw new \Exception('No ticks in axis range');
+        }
+
+        $this->unit_length = $max - $min;
+
+        if ($this->unit_length === 0) {
+            throw new \Exception('Zero length axis (min >= max)');
+        }
+
+        // min_unit = 1, min_space = 1, fit = false
+        parent::__construct(
+            $length,
+            $max,
+            $min,
+            1,
+            1,
+            false,
+            $units_before,
+            $units_after,
+            $decimal_digits,
+            $label_callback,
+            $values,
+        );
+
+        $this->setLength($length);
     }
 
-    if(count($this->ticks) < 1)
-      throw new \Exception('No ticks in axis range');
-
-    $this->unit_length = $max - $min;
-    if($this->unit_length == 0)
-      throw new \Exception('Zero length axis (min >= max)');
-
-    // min_unit = 1, min_space = 1, fit = false
-    parent::__construct($length, $max, $min, 1, 1, false, $units_before,
-      $units_after, $decimal_digits, $label_callback, $values);
-
-    $this->setLength($length);
-  }
-
-  /**
-   * For bar graphs, increase length by 1 unit
-   */
-  public function bar()
-  {
-    $this->unit_length++;
-    $this->setLength($this->length);
-    parent::bar();
-  }
-
-  /**
-   * Returns the size of a unit in grid space
-   */
-  public function unit()
-  {
-    return $this->unit_size;
-  }
-
-  /**
-   * Returns the distance along the axis where 0 should be
-   */
-  public function zero()
-  {
-    return $this->zero;
-  }
-
-  /**
-   * Set length, adjust scaling
-   */
-  public function setLength($l)
-  {
-    $this->length = $l;
-
-    // these values are fixed, based on length
-    $this->unit_size = $this->length / $this->unit_length;
-    $this->zero = -$this->min_value * $this->unit_size;
-
-    // not used by this class, but others expect it to be set
-    $this->grid_spacing = 1;
-  }
-
-  /**
-   * Returns the grid points as an array of GridPoints
-   *  if $start is NULL, just set up the grid spacing without returning points
-   */
-  public function getGridPoints($start)
-  {
-    if($start === null)
-      return;
-
-    $points = [];
-    foreach($this->ticks as $value) {
-      $position = $start + $this->direction * ($this->zero + $value * $this->unit_size);
-      $points[] = $this->getGridPoint($position, $value);
+    /**
+     * For bar graphs, increase length by 1 unit.
+     */
+    public function bar(): void
+    {
+        ++$this->unit_length;
+        $this->setLength($this->length);
+        parent::bar();
     }
 
-    if($this->direction < 0) {
-      usort($points, function($a, $b) { return $b->position - $a->position; });
-    } else {
-      usort($points, function($a, $b) { return $a->position - $b->position; });
+    /**
+     * Returns the size of a unit in grid space.
+     */
+    public function unit()
+    {
+        return $this->unit_size;
     }
 
-    return $points;
-  }
+    /**
+     * Returns the distance along the axis where 0 should be.
+     */
+    public function zero()
+    {
+        return $this->zero;
+    }
+
+    /**
+     * Set length, adjust scaling.
+     *
+     * @param mixed $l
+     */
+    public function setLength($l): void
+    {
+        $this->length = $l;
+
+        // these values are fixed, based on length
+        $this->unit_size = $this->length / $this->unit_length;
+        $this->zero = -$this->min_value * $this->unit_size;
+
+        // not used by this class, but others expect it to be set
+        $this->grid_spacing = 1;
+    }
+
+    /**
+     * Returns the grid points as an array of GridPoints
+     *  if $start is NULL, just set up the grid spacing without returning points.
+     *
+     * @param mixed $start
+     */
+    public function getGridPoints($start)
+    {
+        if ($start === null) {
+            return;
+        }
+
+        $points = [];
+
+        foreach ($this->ticks as $value) {
+            $position = $start + $this->direction * ($this->zero + $value * $this->unit_size);
+            $points[] = $this->getGridPoint($position, $value);
+        }
+
+        if ($this->direction < 0) {
+            usort($points, static function ($a, $b) {
+                return $b->position - $a->position;
+            });
+        } else {
+            usort($points, static function ($a, $b) {
+                return $a->position - $b->position;
+            });
+        }
+
+        return $points;
+    }
 }

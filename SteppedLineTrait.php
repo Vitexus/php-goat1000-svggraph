@@ -1,44 +1,46 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2021-2022 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
-trait SteppedLineTrait {
+trait SteppedLineTrait
+{
+    /**
+     * Double each point to create a stepped line.
+     *
+     * @param mixed $points
+     */
+    protected function getLinePoints($points)
+    {
+        $new_points = [];
+        $prev = null;
 
-  /**
-   * Double each point to create a stepped line
-   */
-  protected function getLinePoints($points)
-  {
-    $new_points = [];
-    $prev = null;
-    foreach($points as $point) {
-      if($prev) {
-        $prev[0] = $point[0];
-        $new_points[] = $prev;
-      }
-      $new_points[] = $point;
-      $prev = $point;
+        foreach ($points as $point) {
+            if ($prev) {
+                $prev[0] = $point[0];
+                $new_points[] = $prev;
+            }
+
+            $new_points[] = $point;
+            $prev = $point;
+        }
+
+        return $new_points;
     }
-
-    return $new_points;
-  }
 }

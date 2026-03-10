@@ -1,134 +1,165 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2013-2022 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
 /**
- * BubbleGraph - scatter graph with bubbles instead of markers
+ * BubbleGraph - scatter graph with bubbles instead of markers.
  */
-class BubbleGraph extends PointGraph {
-
-  public function __construct($w, $h, array $settings, array $fixed_settings = [])
-  {
-    $fs = [
-      'repeated_keys' => 'accept',
-      'require_integer_keys' => false,
-      'require_structured' => ['area'],
-    ];
-    $fs = array_merge($fs, $fixed_settings);
-    parent::__construct($w, $h, $settings, $fs);
-  }
-
-  protected function draw()
-  {
-    $body = $this->grid() . $this->underShapes();
-    $dataset = $this->getOption(['dataset', 0], 0);
-
-    $bnum = 0;
-    $y_axis = $this->y_axes[$this->main_y_axis];
-    $series = '';
-
-    foreach($this->values[$dataset] as $item) {
-      $area = $item->area;
-      $x = $this->gridPosition($item, $bnum);
-      $y = null;
-      if($item->value !== null && $x !== null)
-        $y = $this->gridY($item->value);
-
-      if($y !== null) {
-        $r = $this->getOption('bubble_scale') * $y_axis->unit() * sqrt(abs($area) / M_PI);
-        $circle = ['cx' => $x, 'cy' => $y, 'r' => $r];
-        $colour = $this->getColour($item, $bnum, $dataset);
-        $circle_style = ['fill' => $colour];
-        if($area < 0) {
-          // draw negative bubbles with a checked pattern
-          $pattern = [$colour, 'pattern' => 'check', 'size' => 8];
-          $pid = $this->defs->addPattern($pattern);
-          $circle_style['fill'] = 'url(#' . $pid . ')';
-        }
-        $this->setStroke($circle_style, $item, $bnum, $dataset);
-        $this->addDataLabel($dataset, $bnum, $circle, $item,
-          $x - $r, $y - $r, $r * 2, $r * 2);
-
-        if($this->getOption('show_tooltips'))
-          $this->setTooltip($circle, $item, $dataset, $item->key, $area, true);
-        if($this->getOption('show_context_menu'))
-          $this->setContextMenu($circle, $dataset, $item, true);
-        if($this->getOption('semantic_classes'))
-          $circle['class'] = 'series0';
-        $bubble = $this->element('circle', array_merge($circle, $circle_style));
-        $series .= $this->getLink($item, $item->key, $bubble);
-
-        $this->addMarker($x, $y, $item, null, $dataset, false);
-        $this->setLegendEntry($dataset, $bnum, $item, $circle_style);
-      }
-
-      ++$bnum;
+class BubbleGraph extends PointGraph
+{
+    public function __construct($w, $h, array $settings, array $fixed_settings = [])
+    {
+        $fs = [
+            'repeated_keys' => 'accept',
+            'require_integer_keys' => false,
+            'require_structured' => ['area'],
+        ];
+        $fs = array_merge($fs, $fixed_settings);
+        parent::__construct($w, $h, $settings, $fs);
     }
 
-    $group = [];
-    if($this->getOption('semantic_classes'))
-      $group['class'] = 'series';
-    $shadow_id = $this->defs->getShadow();
-    if($shadow_id !== null)
-      $group['filter'] = 'url(#' . $shadow_id . ')';
-    if(!empty($group))
-      $series = $this->element('g', $group, null, $series);
+    /**
+     * Return bubble for legend.
+     *
+     * @param mixed $x
+     * @param mixed $y
+     * @param mixed $w
+     * @param mixed $h
+     * @param mixed $entry
+     */
+    public function drawLegendEntry($x, $y, $w, $h, $entry)
+    {
+        $bubble = [
+            'cx' => $x + $w / 2,
+            'cy' => $y + $h / 2,
+            'r' => min($w, $h) / 2,
+        ];
 
-    list($best_fit_above, $best_fit_below) = $this->bestFitLines();
-    $body .= $best_fit_below;
-    $body .= $series;
-    $body .= $this->overShapes();
-    $body .= $this->axes();
-    $body .= $this->drawMarkers();
-    $body .= $best_fit_above;
-    return $body;
-  }
+        return $this->element('circle', array_merge($bubble, $entry->style));
+    }
 
-  /**
-   * Checks that the data produces a 2-D plot
-   */
-  protected function checkValues()
-  {
-    parent::checkValues();
+    protected function draw()
+    {
+        $body = $this->grid().$this->underShapes();
+        $dataset = $this->getOption(['dataset', 0], 0);
 
-    // using force_assoc makes things work properly
-    if($this->values->associativeKeys())
-      $this->setOption('force_assoc', true);
+        $bnum = 0;
+        $y_axis = $this->y_axes[$this->main_y_axis];
+        $series = '';
 
-    // prevent drawing actual markers
-    $this->setOption('marker_size', 0);
-  }
+        foreach ($this->values[$dataset] as $item) {
+            $area = $item->area;
+            $x = $this->gridPosition($item, $bnum);
+            $y = null;
 
-  /**
-   * Return bubble for legend
-   */
-  public function drawLegendEntry($x, $y, $w, $h, $entry)
-  {
-    $bubble = [
-      'cx' => $x + $w / 2,
-      'cy' => $y + $h / 2,
-      'r' => min($w, $h) / 2
-    ];
-    return $this->element('circle', array_merge($bubble, $entry->style));
-  }
+            if ($item->value !== null && $x !== null) {
+                $y = $this->gridY($item->value);
+            }
+
+            if ($y !== null) {
+                $r = $this->getOption('bubble_scale') * $y_axis->unit() * sqrt(abs($area) / \M_PI);
+                $circle = ['cx' => $x, 'cy' => $y, 'r' => $r];
+                $colour = $this->getColour($item, $bnum, $dataset);
+                $circle_style = ['fill' => $colour];
+
+                if ($area < 0) {
+                    // draw negative bubbles with a checked pattern
+                    $pattern = [$colour, 'pattern' => 'check', 'size' => 8];
+                    $pid = $this->defs->addPattern($pattern);
+                    $circle_style['fill'] = 'url(#'.$pid.')';
+                }
+
+                $this->setStroke($circle_style, $item, $bnum, $dataset);
+                $this->addDataLabel(
+                    $dataset,
+                    $bnum,
+                    $circle,
+                    $item,
+                    $x - $r,
+                    $y - $r,
+                    $r * 2,
+                    $r * 2,
+                );
+
+                if ($this->getOption('show_tooltips')) {
+                    $this->setTooltip($circle, $item, $dataset, $item->key, $area, true);
+                }
+
+                if ($this->getOption('show_context_menu')) {
+                    $this->setContextMenu($circle, $dataset, $item, true);
+                }
+
+                if ($this->getOption('semantic_classes')) {
+                    $circle['class'] = 'series0';
+                }
+
+                $bubble = $this->element('circle', array_merge($circle, $circle_style));
+                $series .= $this->getLink($item, $item->key, $bubble);
+
+                $this->addMarker($x, $y, $item, null, $dataset, false);
+                $this->setLegendEntry($dataset, $bnum, $item, $circle_style);
+            }
+
+            ++$bnum;
+        }
+
+        $group = [];
+
+        if ($this->getOption('semantic_classes')) {
+            $group['class'] = 'series';
+        }
+
+        $shadow_id = $this->defs->getShadow();
+
+        if ($shadow_id !== null) {
+            $group['filter'] = 'url(#'.$shadow_id.')';
+        }
+
+        if (!empty($group)) {
+            $series = $this->element('g', $group, null, $series);
+        }
+
+        [$best_fit_above, $best_fit_below] = $this->bestFitLines();
+        $body .= $best_fit_below;
+        $body .= $series;
+        $body .= $this->overShapes();
+        $body .= $this->axes();
+        $body .= $this->drawMarkers();
+        $body .= $best_fit_above;
+
+        return $body;
+    }
+
+    /**
+     * Checks that the data produces a 2-D plot.
+     */
+    protected function checkValues(): void
+    {
+        parent::checkValues();
+
+        // using force_assoc makes things work properly
+        if ($this->values->associativeKeys()) {
+            $this->setOption('force_assoc', true);
+        }
+
+        // prevent drawing actual markers
+        $this->setOption('marker_size', 0);
+    }
 }
-

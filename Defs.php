@@ -1,176 +1,223 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2019-2022 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
 /**
- * A class for the <defs> element
+ * A class for the <defs> element.
  */
-class Defs {
+class Defs
+{
+    private $graph;
+    private $defs = [];
+    private $gradients;
+    private $patterns;
+    private $symbols;
+    private $filters;
+    private $elements = [];
 
-  private $graph;
-  private $defs = [];
-  private $gradients = null;
-  private $patterns = null;
-  private $symbols = null;
-  private $filters = null;
-  private $elements = [];
+    public function __construct(&$graph)
+    {
+        $this->graph = &$graph;
+    }
 
-  public function __construct(&$graph)
-  {
-    $this->graph =& $graph;
-  }
+    /**
+     * Add a string to the defs block.
+     *
+     * @param mixed $def
+     */
+    public function add($def): void
+    {
+        $this->defs[] = $def;
+    }
 
-  /**
-   * Add a string to the defs block
-   */
-  public function add($def)
-  {
-    $this->defs[] = $def;
-  }
+    /**
+     * Adds an element to the defs, returning its ID, or the ID
+     * of an existing def with same content.
+     *
+     * @param mixed $element
+     * @param mixed $attrs
+     * @param mixed $content
+     */
+    public function addElement($element, $attrs, $content = '')
+    {
+        $ehash = hash('md5', $element.':'.serialize($attrs).':'.$content);
 
-  /**
-   * Adds an element to the defs, returning its ID, or the ID
-   * of an existing def with same content
-   */
-  public function addElement($element, $attrs, $content = '')
-  {
-    $ehash = hash('md5', $element . ':' . serialize($attrs) . ':' . $content);
-    if(isset($this->elements[$ehash]))
-      return $this->elements[$ehash];
+        if (isset($this->elements[$ehash])) {
+            return $this->elements[$ehash];
+        }
 
-    $attrs['id'] = $this->graph->newID();
-    $this->elements[$ehash] = $attrs['id'];
-    $this->add($this->graph->element($element, $attrs, null, $content));
-    return $attrs['id'];
-  }
+        $attrs['id'] = $this->graph->newID();
+        $this->elements[$ehash] = $attrs['id'];
+        $this->add($this->graph->element($element, $attrs, null, $content));
 
-  /**
-   * Return the defs block, or an empty string if none
-   */
-  public function get()
-  {
-    // insert gradients, patterns, symbols
-    if($this->gradients !== null)
-      $this->gradients->makeGradients($this);
-    if($this->patterns !== null)
-      $this->patterns->makePatterns($this);
-    if($this->symbols !== null)
-      $this->defs[] = $this->symbols->definitions();
-    if($this->filters !== null)
-      $this->filters->makeFilters($this);
+        return $attrs['id'];
+    }
 
-    if(count($this->defs) == 0)
-      return '';
+    /**
+     * Return the defs block, or an empty string if none.
+     */
+    public function get()
+    {
+        // insert gradients, patterns, symbols
+        if ($this->gradients !== null) {
+            $this->gradients->makeGradients($this);
+        }
 
-    return $this->graph->element('defs', null, null, implode('', $this->defs));
-  }
+        if ($this->patterns !== null) {
+            $this->patterns->makePatterns($this);
+        }
 
-  /**
-   * Adds a gradient to the list, returning the element ID for use in url
-   */
-  public function addGradient($colours, $key = null, $radial = false)
-  {
-    if($this->gradients === null)
-      $this->gradients = new GradientList($this->graph);
-    return $this->gradients->addGradient($colours, $key, $radial);
-  }
+        if ($this->symbols !== null) {
+            $this->defs[] = $this->symbols->definitions();
+        }
 
-  /**
-   * Returns the colour at a point in the selected gradient
-   */
-  public function getGradientColour($key, $position)
-  {
-    if($this->gradients === null)
-      return 'none';
+        if ($this->filters !== null) {
+            $this->filters->makeFilters($this);
+        }
 
-    return $this->gradients->getColour($key, $position);
-  }
+        if (\count($this->defs) === 0) {
+            return '';
+        }
 
-  /**
-   * Adds a pattern, returning the element ID
-   */
-  public function addPattern($pattern)
-  {
-    if($this->patterns === null)
-      $this->patterns = new PatternList($this->graph);
-    return $this->patterns->add($pattern);
-  }
+        return $this->graph->element('defs', null, null, implode('', $this->defs));
+    }
 
-  /**
-   * Defines a symbol
-   */
-  public function defineSymbol($content)
-  {
-    if($this->symbols === null)
-      $this->symbols = new Symbols($this->graph);
-    return $this->symbols->define($content);
-  }
+    /**
+     * Adds a gradient to the list, returning the element ID for use in url.
+     *
+     * @param mixed      $colours
+     * @param null|mixed $key
+     * @param mixed      $radial
+     */
+    public function addGradient($colours, $key = null, $radial = false)
+    {
+        if ($this->gradients === null) {
+            $this->gradients = new GradientList($this->graph);
+        }
 
-  /**
-   * Uses a symbol
-   */
-  public function useSymbol($id, $attr, $style = null)
-  {
-    // this should not happen - Symbols class will throw anyway
-    if($this->symbols === null)
-      $this->symbols = new Symbols($this->graph);
-    return $this->symbols->useSymbol($id, $attr, $style);
-  }
+        return $this->gradients->addGradient($colours, $key, $radial);
+    }
 
-  /**
-   * Returns the use count for a symbol
-   */
-  public function symbolUseCount($id)
-  {
-    if($this->symbols === null)
-      return 0;
-    return $this->symbols->useCount($id);
-  }
+    /**
+     * Returns the colour at a point in the selected gradient.
+     *
+     * @param mixed $key
+     * @param mixed $position
+     */
+    public function getGradientColour($key, $position)
+    {
+        if ($this->gradients === null) {
+            return 'none';
+        }
 
-  /**
-   * Adds a filter
-   */
-  public function addFilter($type, $params = null)
-  {
-    if($this->filters === null)
-      $this->filters = new FilterList($this->graph);
-    return $this->filters->add($type, $params);
-  }
+        return $this->gradients->getColour($key, $position);
+    }
 
-  /**
-   * Returns id of shadow, if enabled
-   */
-  public function getShadow()
-  {
-    if(!$this->graph->getOption('show_shadow'))
-      return null;
+    /**
+     * Adds a pattern, returning the element ID.
+     *
+     * @param mixed $pattern
+     */
+    public function addPattern($pattern)
+    {
+        if ($this->patterns === null) {
+            $this->patterns = new PatternList($this->graph);
+        }
 
-    $filter_id = $this->addFilter('shadow', [
-      'opacity' => $this->graph->getOption('shadow_opacity'),
-      'offset_x' => $this->graph->getOption('shadow_offset_x'),
-      'offset_y' => $this->graph->getOption('shadow_offset_y'),
-      'blur' => $this->graph->getOption('shadow_blur'),
-    ]);
-    return $filter_id;
-  }
+        return $this->patterns->add($pattern);
+    }
+
+    /**
+     * Defines a symbol.
+     *
+     * @param mixed $content
+     */
+    public function defineSymbol($content)
+    {
+        if ($this->symbols === null) {
+            $this->symbols = new Symbols($this->graph);
+        }
+
+        return $this->symbols->define($content);
+    }
+
+    /**
+     * Uses a symbol.
+     *
+     * @param mixed      $id
+     * @param mixed      $attr
+     * @param null|mixed $style
+     */
+    public function useSymbol($id, $attr, $style = null)
+    {
+        // this should not happen - Symbols class will throw anyway
+        if ($this->symbols === null) {
+            $this->symbols = new Symbols($this->graph);
+        }
+
+        return $this->symbols->useSymbol($id, $attr, $style);
+    }
+
+    /**
+     * Returns the use count for a symbol.
+     *
+     * @param mixed $id
+     */
+    public function symbolUseCount($id)
+    {
+        if ($this->symbols === null) {
+            return 0;
+        }
+
+        return $this->symbols->useCount($id);
+    }
+
+    /**
+     * Adds a filter.
+     *
+     * @param mixed      $type
+     * @param null|mixed $params
+     */
+    public function addFilter($type, $params = null)
+    {
+        if ($this->filters === null) {
+            $this->filters = new FilterList($this->graph);
+        }
+
+        return $this->filters->add($type, $params);
+    }
+
+    /**
+     * Returns id of shadow, if enabled.
+     */
+    public function getShadow()
+    {
+        if (!$this->graph->getOption('show_shadow')) {
+            return null;
+        }
+
+        return $this->addFilter('shadow', [
+            'opacity' => $this->graph->getOption('shadow_opacity'),
+            'offset_x' => $this->graph->getOption('shadow_offset_x'),
+            'offset_y' => $this->graph->getOption('shadow_offset_y'),
+            'blur' => $this->graph->getOption('shadow_blur'),
+        ]);
+    }
 }
-

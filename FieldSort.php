@@ -1,67 +1,72 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2019-2023 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
 /**
- * Class for sorting array by field
+ * Class for sorting array by field.
  */
-class FieldSort {
+class FieldSort
+{
+    private $key;
+    private $reverse = false;
 
-  private $key = null;
-  private $reverse = false;
+    public function __construct($key, $reverse = false)
+    {
+        $this->key = $key;
+        $this->reverse = $reverse;
+    }
 
-  public function __construct($key, $reverse = false)
-  {
-    $this->key = $key;
-    $this->reverse = $reverse;
-  }
+    /**
+     * Sorts the array based on value of key field.
+     *
+     * @param mixed $data
+     */
+    public function sort(&$data): void
+    {
+        $key = $this->key;
+        $get_val = static function ($a, $key) {
+            return !isset($a[$key]) || $a[$key] === null ? \PHP_INT_MIN : $a[$key];
+        };
+        $bigger = static function ($a, $b, $key) use ($get_val) {
+            $va = $get_val($a, $key);
+            $vb = $get_val($b, $key);
 
-  /**
-   * Sorts the array based on value of key field
-   */
-  public function sort(&$data)
-  {
-    $key = $this->key;
-    $get_val = function($a, $key) {
-      return (!isset($a[$key]) || $a[$key] === null ? PHP_INT_MIN : $a[$key]);
-    };
-    $bigger = function($a, $b, $key) use($get_val) {
-      $va = $get_val($a, $key);
-      $vb = $get_val($b, $key);
-      if($va == $vb)
-        return 0;
-      return $va > $vb ? 1 : -1;
-    };
-    $smaller = function($a, $b, $key) use($get_val) {
-      $va = $get_val($a, $key);
-      $vb = $get_val($b, $key);
-      if($va == $vb)
-        return 0;
-      return $va < $vb ? 1 : -1;
-    };
-    $fn = $this->reverse ? $smaller : $bigger;
-    usort($data, function($a, $b) use($key, $fn) {
-      return $fn($a, $b, $key);
-    });
-  }
+            if ($va === $vb) {
+                return 0;
+            }
+
+            return $va > $vb ? 1 : -1;
+        };
+        $smaller = static function ($a, $b, $key) use ($get_val) {
+            $va = $get_val($a, $key);
+            $vb = $get_val($b, $key);
+
+            if ($va === $vb) {
+                return 0;
+            }
+
+            return $va < $vb ? 1 : -1;
+        };
+        $fn = $this->reverse ? $smaller : $bigger;
+        usort($data, static function ($a, $b) use ($key, $fn) {
+            return $fn($a, $b, $key);
+        });
+    }
 }
-

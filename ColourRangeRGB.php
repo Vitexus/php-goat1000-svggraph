@@ -1,59 +1,68 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2019-2022 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
 /**
- * Colour range for RGB values
+ * Colour range for RGB values.
  */
-class ColourRangeRGB extends ColourRange {
+class ColourRangeRGB extends ColourRange
+{
+    private $r1;
+    private $g1;
+    private $b1;
+    private $rdiff;
+    private $gdiff;
+    private $bdiff;
 
-  private $r1, $g1, $b1;
-  private $rdiff, $gdiff, $bdiff;
+    /**
+     * RGB range.
+     *
+     * @param mixed $r1
+     * @param mixed $g1
+     * @param mixed $b1
+     * @param mixed $r2
+     * @param mixed $g2
+     * @param mixed $b2
+     */
+    public function __construct($r1, $g1, $b1, $r2, $g2, $b2)
+    {
+        $this->r1 = $this->clamp($r1, 0, 255);
+        $this->g1 = $this->clamp($g1, 0, 255);
+        $this->b1 = $this->clamp($b1, 0, 255);
+        $this->rdiff = $this->clamp($r2, 0, 255) - $this->r1;
+        $this->gdiff = $this->clamp($g2, 0, 255) - $this->g1;
+        $this->bdiff = $this->clamp($b2, 0, 255) - $this->b1;
+    }
 
-  /**
-   * RGB range
-   */
-  public function __construct($r1, $g1, $b1, $r2, $g2, $b2)
-  {
-    $this->r1 = $this->clamp($r1, 0, 255);
-    $this->g1 = $this->clamp($g1, 0, 255);
-    $this->b1 = $this->clamp($b1, 0, 255);
-    $this->rdiff = $this->clamp($r2, 0, 255) - $this->r1;
-    $this->gdiff = $this->clamp($g2, 0, 255) - $this->g1;
-    $this->bdiff = $this->clamp($b2, 0, 255) - $this->b1;
-  }
+    /**
+     * Return the colour from the range.
+     */
+    #[\ReturnTypeWillChange]
+    public function offsetGet($offset)
+    {
+        $c = max($this->count - 1, 1);
+        $offset = $this->clamp($offset, 0, $c);
+        $r = $this->r1 + $offset * $this->rdiff / $c;
+        $g = $this->g1 + $offset * $this->gdiff / $c;
+        $b = $this->b1 + $offset * $this->bdiff / $c;
 
-  /**
-   * Return the colour from the range
-   */
-  #[\ReturnTypeWillChange]
-  public function offsetGet($offset)
-  {
-    $c = max($this->count - 1, 1);
-    $offset = $this->clamp($offset, 0, $c);
-    $r = $this->r1 + $offset * $this->rdiff / $c;
-    $g = $this->g1 + $offset * $this->gdiff / $c;
-    $b = $this->b1 + $offset * $this->bdiff / $c;
-    return sprintf('#%02x%02x%02x', $r, $g, $b);
-  }
+        return sprintf('#%02x%02x%02x', $r, $g, $b);
+    }
 }
-

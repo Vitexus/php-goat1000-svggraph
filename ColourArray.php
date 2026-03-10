@@ -1,73 +1,72 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2019-2022 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
-class ColourArray implements \ArrayAccess {
+class ColourArray implements \ArrayAccess
+{
+    private $colours;
+    private $count;
 
-  private $colours;
-  private $count;
+    public function __construct($colours)
+    {
+        $this->colours = $colours;
+        $this->count = \count($colours);
+    }
 
-  public function __construct($colours)
-  {
-    $this->colours = $colours;
-    $this->count = count($colours);
-  }
+    /**
+     * Not used by this class.
+     *
+     * @param mixed $count
+     */
+    public function setup($count): void
+    {
+        // count comes from array, not number of bars etc.
+    }
 
-  /**
-   * Not used by this class
-   */
-  public function setup($count)
-  {
-    // count comes from array, not number of bars etc.
-  }
+    /**
+     * always true, because it wraps around.
+     */
+    #[\ReturnTypeWillChange]
+    public function offsetExists($offset)
+    {
+        return true;
+    }
 
-  /**
-   * always true, because it wraps around
-   */
-  #[\ReturnTypeWillChange]
-  public function offsetExists($offset)
-  {
-    return true;
-  }
+    /**
+     * return the colour.
+     */
+    #[\ReturnTypeWillChange]
+    public function offsetGet($offset)
+    {
+        return $this->colours[$offset % $this->count];
+    }
 
-  /**
-   * return the colour
-   */
-  #[\ReturnTypeWillChange]
-  public function offsetGet($offset)
-  {
-    return $this->colours[$offset % $this->count];
-  }
+    #[\ReturnTypeWillChange]
+    public function offsetSet($offset, $value): void
+    {
+        $this->colours[$offset % $this->count] = $value;
+    }
 
-  #[\ReturnTypeWillChange]
-  public function offsetSet($offset, $value)
-  {
-    $this->colours[$offset % $this->count] = $value;
-  }
-
-  #[\ReturnTypeWillChange]
-  public function offsetUnset($offset)
-  {
-    throw new \Exception('Unexpected offsetUnset');
-  }
+    #[\ReturnTypeWillChange]
+    public function offsetUnset($offset): void
+    {
+        throw new \Exception('Unexpected offsetUnset');
+    }
 }
-

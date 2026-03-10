@@ -3,3 +3,6 @@ debian/php-goat1000-svggraph.substvars
 debian/files
 debian/debhelper-build-stamp
 debian/.debhelper/
+vendor/
+.build/
+

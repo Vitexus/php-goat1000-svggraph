@@ -1,44 +1,41 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2016-2021 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
 /**
- * A class to hold the details of an entry in the legend
+ * A class to hold the details of an entry in the legend.
  */
-class LegendEntry {
+class LegendEntry
+{
+    public $item;
+    public $text;
+    public $link;
+    public $style;
+    public $width = 0;
+    public $height = 0;
 
-  public $item = null;
-  public $text = null;
-  public $link = null;
-  public $style = null;
-  public $width = 0;
-  public $height = 0;
-
-  public function __construct($item, $text, $link, $style)
-  {
-    $this->item = $item;
-    $this->text = $text;
-    $this->link = $link;
-    $this->style = $style;
-  }
+    public function __construct($item, $text, $link, $style)
+    {
+        $this->item = $item;
+        $this->text = $text;
+        $this->link = $link;
+        $this->style = $style;
+    }
 }
-

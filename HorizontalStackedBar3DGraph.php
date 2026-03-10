@@ -1,87 +1,124 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2022 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
-class HorizontalStackedBar3DGraph extends HorizontalBar3DGraph {
+class HorizontalStackedBar3DGraph extends HorizontalBar3DGraph
+{
+    use StackedBarTrait;
 
-  use StackedBarTrait;
-
-  public function __construct($w, $h, $settings, $fixed_settings = [])
-  {
-    $fixed = [ 'single_axis' => true ];
-    $fixed_settings = array_merge($fixed, $fixed_settings);
-    parent::__construct($w, $h, $settings, $fixed_settings);
-  }
-
-  /**
-   * Trait version draws totals above or below bars, we want left and right
-   */
-  public function dataLabelPosition($dataset, $index, &$item, $x, $y, $w, $h,
-    $label_w, $label_h)
-  {
-    list($pos, $target) = parent::dataLabelPosition($dataset, $index, $item,
-      $x, $y, $w, $h, $label_w, $label_h);
-    if(!is_numeric($dataset)) {
-      list($d) = explode('-', $dataset);
-      if($d === 'totalpos') {
-        if(isset($this->last_position_pos[$index])) {
-          list($lpos, $l_w) = $this->last_position_pos[$index];
-          list($hpos, $vpos) = Graph::translatePosition($lpos);
-          if($hpos == 'or') {
-            $num_offset = new Number($l_w);
-            return ['middle outside right ' . $num_offset . ' 0', $target];
-          }
-        }
-        return ['outside right', $target];
-      }
-      if($d === 'totalneg') {
-        if(isset($this->last_position_neg[$index])) {
-          list($lpos, $l_w) = $this->last_position_neg[$index];
-          list($hpos, $vpos) = Graph::translatePosition($lpos);
-          if($hpos == 'ol') {
-            $num_offset = new Number(-$l_w);
-            return ['middle outside left ' . $num_offset . ' 0', $target];
-          }
-        }
-        return ['outside left', $target];
-      }
+    public function __construct($w, $h, $settings, $fixed_settings = [])
+    {
+        $fixed = ['single_axis' => true];
+        $fixed_settings = array_merge($fixed, $fixed_settings);
+        parent::__construct($w, $h, $settings, $fixed_settings);
     }
-    if($label_w > $w && Graph::isPositionInside($pos))
-      $pos = str_replace(['outside left','outside right'], 'centre', $pos);
 
-    if($item->value > 0)
-      $this->last_position_pos[$index] = [$pos, $label_w];
-    else
-      $this->last_position_neg[$index] = [$pos, $label_w];
-    return [$pos, $target];
-  }
+    /**
+     * Trait version draws totals above or below bars, we want left and right.
+     *
+     * @param mixed $dataset
+     * @param mixed $index
+     * @param mixed $item
+     * @param mixed $x
+     * @param mixed $y
+     * @param mixed $w
+     * @param mixed $h
+     * @param mixed $label_w
+     * @param mixed $label_h
+     */
+    public function dataLabelPosition(
+        $dataset,
+        $index,
+        &$item,
+        $x,
+        $y,
+        $w,
+        $h,
+        $label_w,
+        $label_h,
+    ) {
+        [$pos, $target] = parent::dataLabelPosition(
+            $dataset,
+            $index,
+            $item,
+            $x,
+            $y,
+            $w,
+            $h,
+            $label_w,
+            $label_h,
+        );
 
-  /**
-   * Returns the ordering for legend entries
-   */
-  public function getLegendOrder()
-  {
-    // bars are stacked from left to right
-    return null;
-  }
+        if (!is_numeric($dataset)) {
+            [$d] = explode('-', $dataset);
+
+            if ($d === 'totalpos') {
+                if (isset($this->last_position_pos[$index])) {
+                    [$lpos, $l_w] = $this->last_position_pos[$index];
+                    [$hpos, $vpos] = Graph::translatePosition($lpos);
+
+                    if ($hpos === 'or') {
+                        $num_offset = new Number($l_w);
+
+                        return ['middle outside right '.$num_offset.' 0', $target];
+                    }
+                }
+
+                return ['outside right', $target];
+            }
+
+            if ($d === 'totalneg') {
+                if (isset($this->last_position_neg[$index])) {
+                    [$lpos, $l_w] = $this->last_position_neg[$index];
+                    [$hpos, $vpos] = Graph::translatePosition($lpos);
+
+                    if ($hpos === 'ol') {
+                        $num_offset = new Number(-$l_w);
+
+                        return ['middle outside left '.$num_offset.' 0', $target];
+                    }
+                }
+
+                return ['outside left', $target];
+            }
+        }
+
+        if ($label_w > $w && Graph::isPositionInside($pos)) {
+            $pos = str_replace(['outside left', 'outside right'], 'centre', $pos);
+        }
+
+        if ($item->value > 0) {
+            $this->last_position_pos[$index] = [$pos, $label_w];
+        } else {
+            $this->last_position_neg[$index] = [$pos, $label_w];
+        }
+
+        return [$pos, $target];
+    }
+
+    /**
+     * Returns the ordering for legend entries.
+     */
+    public function getLegendOrder()
+    {
+        // bars are stacked from left to right
+        return null;
+    }
 }
-

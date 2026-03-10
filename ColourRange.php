@@ -1,68 +1,71 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2019-2022 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
 /**
- * Abstract class implements common methods
+ * Abstract class implements common methods.
  */
-abstract class ColourRange implements \ArrayAccess {
+abstract class ColourRange implements \ArrayAccess
+{
+    protected $count = 2;
 
-  protected $count = 2;
+    /**
+     * Sets up the length of the range.
+     *
+     * @param mixed $count
+     */
+    public function setup($count): void
+    {
+        $this->count = $count;
+    }
 
-  /**
-   * Sets up the length of the range
-   */
-  public function setup($count)
-  {
-    $this->count = $count;
-  }
+    /**
+     * always true, because it wraps around.
+     */
+    #[\ReturnTypeWillChange]
+    public function offsetExists($offset)
+    {
+        return true;
+    }
 
-  /**
-   * always true, because it wraps around
-   */
-  #[\ReturnTypeWillChange]
-  public function offsetExists($offset)
-  {
-    return true;
-  }
+    #[\ReturnTypeWillChange]
+    public function offsetSet($offset, $value): void
+    {
+        throw new \Exception('Unexpected offsetSet');
+    }
 
-  #[\ReturnTypeWillChange]
-  public function offsetSet($offset, $value)
-  {
-    throw new \Exception('Unexpected offsetSet');
-  }
+    #[\ReturnTypeWillChange]
+    public function offsetUnset($offset): void
+    {
+        throw new \Exception('Unexpected offsetUnset');
+    }
 
-  #[\ReturnTypeWillChange]
-  public function offsetUnset($offset)
-  {
-    throw new \Exception('Unexpected offsetUnset');
-  }
-
-  /**
-   * Clamps a value to range $min-$max
-   */
-  protected static function clamp($val, $min, $max)
-  {
-    return min($max, max($min, $val));
-  }
+    /**
+     * Clamps a value to range $min-$max.
+     *
+     * @param mixed $val
+     * @param mixed $min
+     * @param mixed $max
+     */
+    protected static function clamp($val, $min, $max)
+    {
+        return min($max, max($min, $val));
+    }
 }
-

@@ -1,300 +1,348 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2011-2022 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
-class MultiGraph implements \Countable, \ArrayAccess, \Iterator {
+class MultiGraph implements \ArrayAccess, \Countable, \Iterator
+{
+    private $values;
+    private $datasets = 0;
+    private $enabled_datasets;
+    private $force_assoc;
+    private $datetime_keys;
+    private $max_key;
+    private $min_key;
+    private $max_value;
+    private $min_value;
+    private $max_sum_value;
+    private $min_sum_value;
+    private $item_list = [];
+    private $position = 0;
+    private $item_cache = [];
+    private $item_cache_pos = -1;
 
-  private $values;
-  private $datasets = 0;
-  private $enabled_datasets = null;
-  private $force_assoc;
-  private $datetime_keys;
-  private $max_key = null;
-  private $min_key = null;
-  private $max_value = null;
-  private $min_value = null;
-  private $max_sum_value = null;
-  private $min_sum_value = null;
-  private $item_list = [];
-  private $position = 0;
-  private $item_cache = [];
-  private $item_cache_pos = -1;
+    public function __construct($values, $force_assoc, $datetime_keys, $int_keys)
+    {
+        $this->values = &$values;
+        $this->force_assoc = $force_assoc;
+        $this->datetime_keys = $datetime_keys;
+        $keys = [];
 
-  public function __construct($values, $force_assoc, $datetime_keys, $int_keys)
-  {
-    $this->values =& $values;
-    $this->force_assoc = $force_assoc;
-    $this->datetime_keys = $datetime_keys;
-    $keys = [];
+        // convert unstructured data to structured
+        if (\count($values) > 1 && $this->values instanceof Data) {
+            $this->values = StructuredData::convertFrom(
+                $values,
+                $force_assoc,
+                $datetime_keys,
+                $int_keys,
+            );
+        }
 
-    // convert unstructured data to structured
-    if(count($values) > 1 && $this->values instanceof Data) {
-      $this->values = StructuredData::convertFrom($values, $force_assoc,
-        $datetime_keys, $int_keys);
-    }
-    $this->datasets = count($this->values);
-    $this->enabled_datasets = range(0, $this->datasets - 1);
-  }
-
-  /**
-   * Sets the list of datasets that are enabled
-   */
-  public function setEnabledDatasets($datasets)
-  {
-    if($datasets === null)
-      $datasets = range(0, $this->datasets - 1);
-    if(!is_array($datasets))
-      $datasets = [$datasets];
-
-    $enabled = [];
-    foreach($datasets as $d)
-      if($d >= 0 && $d < $this->datasets)
-        $enabled[] = $d;
-    $this->enabled_datasets = $enabled;
-  }
-
-  /**
-   * Returns the list of enabled datasets
-   */
-  public function getEnabledDatasets()
-  {
-    return $this->enabled_datasets;
-  }
-
-  /**
-   * Pass all unhandled functions through to the structured data instance
-   */
-  public function __call($name, $arguments)
-  {
-    return call_user_func_array([$this->values, $name], $arguments);
-  }
-
-  /**
-   * Implement Iterator interface
-   */
-  #[\ReturnTypeWillChange]
-  public function current()
-  {
-    if($this->item_cache_pos != $this->position) {
-      $this->item_cache[0] = $this->values[0]->getItemByIndex($this->position);
-
-      // use NewFrom to create other data items quicker
-      for($i = 1; $i < $this->datasets; ++$i)
-        $this->item_cache[$i] = $this->item_cache[0]->newFrom($i);
-      $this->item_cache_pos = $this->position;
-    }
-    return $this->item_cache;
-  }
-  #[\ReturnTypeWillChange]
-  public function key()
-  {
-    return $this->position;
-  }
-  #[\ReturnTypeWillChange]
-  public function next()
-  {
-    ++$this->position;
-  }
-  #[\ReturnTypeWillChange]
-  public function rewind()
-  {
-    $this->position = 0;
-  }
-  #[\ReturnTypeWillChange]
-  public function valid()
-  {
-    return $this->position < $this->itemsCount();
-  }
-
-  /**
-   * ArrayAccess methods
-   */
-  #[\ReturnTypeWillChange]
-  public function offsetExists($offset)
-  {
-    return ($offset >= 0 && $offset < $this->datasets);
-  }
-
-  #[\ReturnTypeWillChange]
-  public function offsetGet($offset)
-  {
-    return $this->values[$offset];
-  }
-
-  /**
-   * Don't allow writing to the data
-   */
-  #[\ReturnTypeWillChange]
-  public function offsetSet($offset, $value)
-  {
-    throw new \Exception('Read-only');
-  }
-  #[\ReturnTypeWillChange]
-  public function offsetUnset($offset)
-  {
-    throw new \Exception('Read-only');
-  }
-
-  /**
-   * Countable method
-   */
-  #[\ReturnTypeWillChange]
-  public function count()
-  {
-    return $this->datasets;
-  }
-
-  /**
-   * Returns the number of items
-   */
-  public function itemsCount()
-  {
-    // use -1 for all items
-    return $this->values->itemsCount(-1);
-  }
-
-  /**
-   * Returns the maximum value
-   */
-  public function getMaxValue()
-  {
-    if($this->max_value !== null)
-      return $this->max_value;
-    $maxima = [];
-    $chunk_count = count($this->values);
-    for($i = 0; $i < $chunk_count; ++$i) {
-      if(!in_array($i, $this->enabled_datasets))
-        continue;
-      $maxima[] = $this->values->getMaxValue($i);
+        $this->datasets = \count($this->values);
+        $this->enabled_datasets = range(0, $this->datasets - 1);
     }
 
-    $this->max_value = count($maxima) ? max($maxima) : null;
-    return $this->max_value;
-  }
-
-
-  /**
-   * Returns the minimum value
-   */
-  public function getMinValue()
-  {
-    if($this->min_value !== null)
-      return $this->min_value;
-    $minima = [];
-    $chunk_count = count($this->values);
-    for($i = 0; $i < $chunk_count; ++$i) {
-      if(!in_array($i, $this->enabled_datasets))
-        continue;
-      $min_val = $this->values->getMinValue($i);
-      if($min_val !== null)
-        $minima[] = $min_val;
+    /**
+     * Pass all unhandled functions through to the structured data instance.
+     *
+     * @param mixed $name
+     * @param mixed $arguments
+     */
+    public function __call($name, $arguments)
+    {
+        return \call_user_func_array([$this->values, $name], $arguments);
     }
 
-    $this->min_value = count($minima) ? min($minima) : null;
-    return $this->min_value;
-  }
+    /**
+     * Sets the list of datasets that are enabled.
+     *
+     * @param mixed $datasets
+     */
+    public function setEnabledDatasets($datasets): void
+    {
+        if ($datasets === null) {
+            $datasets = range(0, $this->datasets - 1);
+        }
 
+        if (!\is_array($datasets)) {
+            $datasets = [$datasets];
+        }
 
-  /**
-   * Returns the maximum key value
-   */
-  public function getMaxKey()
-  {
-    if($this->max_key !== null)
-      return $this->max_key;
+        $enabled = [];
 
-    $max = [];
-    for($i = 0; $i < $this->datasets; ++$i) {
-      if(!in_array($i, $this->enabled_datasets))
-        continue;
-      $max[] = $this->values->getMaxKey($i);
+        foreach ($datasets as $d) {
+            if ($d >= 0 && $d < $this->datasets) {
+                $enabled[] = $d;
+            }
+        }
+
+        $this->enabled_datasets = $enabled;
     }
-    $this->max_key = count($max) ? max($max) : null;
-    return $this->max_key;
-  }
 
-  /**
-   * Returns the minimum key value
-   */
-  public function getMinKey()
-  {
-    if($this->min_key !== null)
-      return $this->min_key;
-
-    $min = [];
-    for($i = 0; $i < $this->datasets; ++$i) {
-      if(!in_array($i, $this->enabled_datasets))
-        continue;
-      $min[] = $this->values->getMinKey($i);
+    /**
+     * Returns the list of enabled datasets.
+     */
+    public function getEnabledDatasets()
+    {
+        return $this->enabled_datasets;
     }
-    $this->min_key = count($min) ? min($min) : null;
-    return $this->min_key;
-  }
 
-  /**
-   * Returns the maximum sum value
-   */
-  public function getMaxSumValue()
-  {
-    if($this->max_sum_value === null)
-      $this->calcMinMaxSumValues();
-    return $this->max_sum_value;
-  }
+    /**
+     * Implement Iterator interface.
+     */
+    #[\ReturnTypeWillChange]
+    public function current()
+    {
+        if ($this->item_cache_pos !== $this->position) {
+            $this->item_cache[0] = $this->values[0]->getItemByIndex($this->position);
 
-  /**
-   * Returns the minimum sum value (the negative part)
-   */
-  public function getMinSumValue()
-  {
-    if($this->min_sum_value === null)
-      $this->calcMinMaxSumValues();
-    return $this->min_sum_value;
-  }
+            // use NewFrom to create other data items quicker
+            for ($i = 1; $i < $this->datasets; ++$i) {
+                $this->item_cache[$i] = $this->item_cache[0]->newFrom($i);
+            }
 
+            $this->item_cache_pos = $this->position;
+        }
 
-  /**
-   * Calculates the minimum and maximum sum values
-   */
-  public function calcMinMaxSumValues()
-  {
-    list($this->min_sum_value, $this->max_sum_value) =
-      $this->values->getMinMaxSumValuesFor($this->enabled_datasets);
-  }
+        return $this->item_cache;
+    }
+    #[\ReturnTypeWillChange]
+    public function key()
+    {
+        return $this->position;
+    }
+    #[\ReturnTypeWillChange]
+    public function next(): void
+    {
+        ++$this->position;
+    }
+    #[\ReturnTypeWillChange]
+    public function rewind(): void
+    {
+        $this->position = 0;
+    }
+    #[\ReturnTypeWillChange]
+    public function valid()
+    {
+        return $this->position < $this->itemsCount();
+    }
 
-  /**
-   * Access to the structured data values
-   */
-  public function &getValues()
-  {
-    return $this->values;
-  }
+    /**
+     * ArrayAccess methods.
+     */
+    #[\ReturnTypeWillChange]
+    public function offsetExists($offset)
+    {
+        return $offset >= 0 && $offset < $this->datasets;
+    }
 
-  /**
-   * Pass through to the structured data values
-   */
-  public function getData($index, $name, &$value)
-  {
-    // the reference means __call can't handle this
-    return $this->values->getData($index, $name, $value);
-  }
+    #[\ReturnTypeWillChange]
+    public function offsetGet($offset)
+    {
+        return $this->values[$offset];
+    }
+
+    /**
+     * Don't allow writing to the data.
+     */
+    #[\ReturnTypeWillChange]
+    public function offsetSet($offset, $value): void
+    {
+        throw new \Exception('Read-only');
+    }
+    #[\ReturnTypeWillChange]
+    public function offsetUnset($offset): void
+    {
+        throw new \Exception('Read-only');
+    }
+
+    /**
+     * Countable method.
+     */
+    #[\ReturnTypeWillChange]
+    public function count()
+    {
+        return $this->datasets;
+    }
+
+    /**
+     * Returns the number of items.
+     */
+    public function itemsCount()
+    {
+        // use -1 for all items
+        return $this->values->itemsCount(-1);
+    }
+
+    /**
+     * Returns the maximum value.
+     */
+    public function getMaxValue()
+    {
+        if ($this->max_value !== null) {
+            return $this->max_value;
+        }
+
+        $maxima = [];
+        $chunk_count = \count($this->values);
+
+        for ($i = 0; $i < $chunk_count; ++$i) {
+            if (!\in_array($i, $this->enabled_datasets, true)) {
+                continue;
+            }
+
+            $maxima[] = $this->values->getMaxValue($i);
+        }
+
+        $this->max_value = \count($maxima) ? max($maxima) : null;
+
+        return $this->max_value;
+    }
+
+    /**
+     * Returns the minimum value.
+     */
+    public function getMinValue()
+    {
+        if ($this->min_value !== null) {
+            return $this->min_value;
+        }
+
+        $minima = [];
+        $chunk_count = \count($this->values);
+
+        for ($i = 0; $i < $chunk_count; ++$i) {
+            if (!\in_array($i, $this->enabled_datasets, true)) {
+                continue;
+            }
+
+            $min_val = $this->values->getMinValue($i);
+
+            if ($min_val !== null) {
+                $minima[] = $min_val;
+            }
+        }
+
+        $this->min_value = \count($minima) ? min($minima) : null;
+
+        return $this->min_value;
+    }
+
+    /**
+     * Returns the maximum key value.
+     */
+    public function getMaxKey()
+    {
+        if ($this->max_key !== null) {
+            return $this->max_key;
+        }
+
+        $max = [];
+
+        for ($i = 0; $i < $this->datasets; ++$i) {
+            if (!\in_array($i, $this->enabled_datasets, true)) {
+                continue;
+            }
+
+            $max[] = $this->values->getMaxKey($i);
+        }
+
+        $this->max_key = \count($max) ? max($max) : null;
+
+        return $this->max_key;
+    }
+
+    /**
+     * Returns the minimum key value.
+     */
+    public function getMinKey()
+    {
+        if ($this->min_key !== null) {
+            return $this->min_key;
+        }
+
+        $min = [];
+
+        for ($i = 0; $i < $this->datasets; ++$i) {
+            if (!\in_array($i, $this->enabled_datasets, true)) {
+                continue;
+            }
+
+            $min[] = $this->values->getMinKey($i);
+        }
+
+        $this->min_key = \count($min) ? min($min) : null;
+
+        return $this->min_key;
+    }
+
+    /**
+     * Returns the maximum sum value.
+     */
+    public function getMaxSumValue()
+    {
+        if ($this->max_sum_value === null) {
+            $this->calcMinMaxSumValues();
+        }
+
+        return $this->max_sum_value;
+    }
+
+    /**
+     * Returns the minimum sum value (the negative part).
+     */
+    public function getMinSumValue()
+    {
+        if ($this->min_sum_value === null) {
+            $this->calcMinMaxSumValues();
+        }
+
+        return $this->min_sum_value;
+    }
+
+    /**
+     * Calculates the minimum and maximum sum values.
+     */
+    public function calcMinMaxSumValues(): void
+    {
+        [$this->min_sum_value, $this->max_sum_value] =
+          $this->values->getMinMaxSumValuesFor($this->enabled_datasets);
+    }
+
+    /**
+     * Access to the structured data values.
+     */
+    public function &getValues()
+    {
+        return $this->values;
+    }
+
+    /**
+     * Pass through to the structured data values.
+     *
+     * @param mixed $index
+     * @param mixed $name
+     * @param mixed $value
+     */
+    public function getData($index, $name, &$value)
+    {
+        // the reference means __call can't handle this
+        return $this->values->getData($index, $name, $value);
+    }
 }
-

@@ -1,115 +1,134 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2022 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
-class ParetoChart extends BarAndLineGraph {
+class ParetoChart extends BarAndLineGraph
+{
+    public function __construct($w, $h, array $settings, array $fixed_settings = [])
+    {
+        $fs = [
+            'dataset_axis' => [0, 1],
+            'line_dataset' => [1],
+            'datetime_keys' => false,
+        ];
+        $s = [
+            'tooltip_callback' => static function ($d, $k, $v) {
+                if ($k === null || $v === null) {
+                    return null;
+                }
 
-  public function __construct($w, $h, array $settings, array $fixed_settings = [])
-  {
-    $fs = [
-      'dataset_axis' => [0,1],
-      'line_dataset' => [1],
-      'datetime_keys' => false,
-    ];
-    $s = [
-      'tooltip_callback' => function($d, $k, $v) {
-        if($k === null || $v === null)
-          return null;
-        if($d == 0)
-          return $k . ": " . new Number($v);
-        return new Number($v) . '%';
-      },
-    ];
-    $fs = array_merge($fs, $fixed_settings);
+                if ($d === 0) {
+                    return $k.': '.new Number($v);
+                }
 
-    // to pass settings into line graph
-    $settings = array_merge($s, $settings);
+                return new Number($v).'%';
+            },
+        ];
+        $fs = array_merge($fs, $fixed_settings);
 
-    parent::__construct($w, $h, $settings, $fs);
-  }
+        // to pass settings into line graph
+        $settings = array_merge($s, $settings);
 
-  /**
-   * Override to process values into order and add line graph
-   */
-  function values($values)
-  {
-    $res = parent::values($values);
-    if(empty($values) || $this->values->error)
-      return $res;
-
-    if($this->values instanceof Data)
-      $this->values = StructuredData::convertFrom($this->values, true, false, false);
-
-    $dataset = $this->getOption(['dataset', 0], 0);
-    $this->values->sort($dataset, true);
-    $sum = 0;
-    foreach($this->values[$dataset] as $item) {
-      if($item->value < 0)
-        throw new \Exception('Negative values not supported');
-      $sum += $item->value;
+        parent::__construct($w, $h, $settings, $fs);
     }
 
-    $running = 0;
-    $this->values->revalue(2, function($key, $row) use(&$running, $sum, $dataset) {
-      $value = $row[$dataset];
-      $running += $value;
-      $new_row = [$value, $sum > 0 ? 100 * $running / $sum : 100];
-      return $new_row;
-    });
+    /**
+     * Override to process values into order and add line graph.
+     *
+     * @param mixed $values
+     */
+    public function values($values)
+    {
+        $res = parent::values($values);
 
-    $this->setOption('line_bar', 1);
-    $this->setOption('units_y', [null, '%']);
-    $this->setOption('minimum_units_y', 1);
-    $this->setOption('dataset', null);
+        if (empty($values) || $this->values->error) {
+            return $res;
+        }
 
-    // update MultiGraph with new data
-    $this->multi_graph = new MultiGraph($this->values, false, false, false);
-    $this->multi_graph->setEnabledDatasets([0,1]);
-    return $res;
-  }
+        if ($this->values instanceof Data) {
+            $this->values = StructuredData::convertFrom($this->values, true, false, false);
+        }
 
-  /**
-   * Override to prevent offset
-   */
-  public function getLineOffset($dataset)
-  {
-    $g_width = $this->x_axes[$this->main_x_axis]->unit();
-    return $g_width;
-    return 0;
-  }
+        $dataset = $this->getOption(['dataset', 0], 0);
+        $this->values->sort($dataset, true);
+        $sum = 0;
 
-  /**
-   * Adds starting point to line
-   */
-  public function drawLine($dataset, $points, $y_bottom)
-  {
-    $x = $this->gridX(0);
-    $y = $this->gridY(0, 1);
-    $p = [$x, $y, null, $dataset, 0];
-    $points = array_merge([$p], $points);
+        foreach ($this->values[$dataset] as $item) {
+            if ($item->value < 0) {
+                throw new \Exception('Negative values not supported');
+            }
 
-    // add a marker at start of line
-    $item = new DataItem(0, 0);
-    $this->linegraph->addMarker($x, $y, $item, null, $dataset);
-    return $this->linegraph->drawLine($dataset, $points, $y_bottom);
-  }
+            $sum += $item->value;
+        }
+
+        $running = 0;
+        $this->values->revalue(2, static function ($key, $row) use (&$running, $sum, $dataset) {
+            $value = $row[$dataset];
+            $running += $value;
+            $new_row = [$value, $sum > 0 ? 100 * $running / $sum : 100];
+
+            return $new_row;
+        });
+
+        $this->setOption('line_bar', 1);
+        $this->setOption('units_y', [null, '%']);
+        $this->setOption('minimum_units_y', 1);
+        $this->setOption('dataset', null);
+
+        // update MultiGraph with new data
+        $this->multi_graph = new MultiGraph($this->values, false, false, false);
+        $this->multi_graph->setEnabledDatasets([0, 1]);
+
+        return $res;
+    }
+
+    /**
+     * Override to prevent offset.
+     *
+     * @param mixed $dataset
+     */
+    public function getLineOffset($dataset)
+    {
+        return $this->x_axes[$this->main_x_axis]->unit();
+
+        return 0;
+    }
+
+    /**
+     * Adds starting point to line.
+     *
+     * @param mixed $dataset
+     * @param mixed $points
+     * @param mixed $y_bottom
+     */
+    public function drawLine($dataset, $points, $y_bottom)
+    {
+        $x = $this->gridX(0);
+        $y = $this->gridY(0, 1);
+        $p = [$x, $y, null, $dataset, 0];
+        $points = array_merge([$p], $points);
+
+        // add a marker at start of line
+        $item = new DataItem(0, 0);
+        $this->linegraph->addMarker($x, $y, $item, null, $dataset);
+
+        return $this->linegraph->drawLine($dataset, $points, $y_bottom);
+    }
 }

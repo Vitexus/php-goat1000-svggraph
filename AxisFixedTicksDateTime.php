@@ -1,75 +1,86 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Copyright (C) 2021 Graham Breach
+ * This file is part of the SVGGraph package
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * https://www.goat1000.com/svggraph.php
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * (c) Vítězslav Dvořák <info@vitexsoftware.cz>
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 /**
- * For more information, please contact <graham@goat1000.com>
+ * For more information, please contact <graham@goat1000.com>.
  */
 
 namespace Goat1000\SVGGraph;
 
 /**
- * Class for axis with specific tick marks and date/time keys
+ * Class for axis with specific tick marks and date/time keys.
  */
-class AxisFixedTicksDateTime extends AxisDateTime {
+class AxisFixedTicksDateTime extends AxisDateTime
+{
+    protected $ticks;
 
-  protected $ticks;
+    public function __construct($length, $max, $min, $ticks, $options)
+    {
+        // only keep the ticks that are inside the axis bounds
+        $this->ticks = [];
 
-  public function __construct($length, $max, $min, $ticks, $options)
-  {
-    // only keep the ticks that are inside the axis bounds
-    $this->ticks = [];
-    foreach($ticks as $tstr) {
-      $t = Graph::dateConvert($tstr);
-      if($t === null)
-        throw new \Exception('Ticks not in correct date/time format');
+        foreach ($ticks as $tstr) {
+            $t = Graph::dateConvert($tstr);
 
-      if($t >= $min && $t <= $max)
-        $this->ticks[] = $t;
+            if ($t === null) {
+                throw new \Exception('Ticks not in correct date/time format');
+            }
+
+            if ($t >= $min && $t <= $max) {
+                $this->ticks[] = $t;
+            }
+        }
+
+        if (\count($this->ticks) < 1) {
+            throw new \Exception('No ticks in axis range');
+        }
+
+        // min_space = 1, fixed_division = null, levels = null,
+        parent::__construct($length, $max, $min, 1, null, null, $options);
     }
 
-    if(count($this->ticks) < 1)
-      throw new \Exception('No ticks in axis range');
+    /**
+     * Returns the grid points as an array of GridPoints
+     *  if $start is NULL, just set up the grid spacing without returning points.
+     *
+     * @param mixed $start
+     */
+    public function getGridPoints($start)
+    {
+        if ($start === null) {
+            return;
+        }
 
-    // min_space = 1, fixed_division = null, levels = null,
-    parent::__construct($length, $max, $min, 1, null, null, $options);
-  }
+        $points = [];
 
-  /**
-   * Returns the grid points as an array of GridPoints
-   *  if $start is NULL, just set up the grid spacing without returning points
-   */
-  public function getGridPoints($start)
-  {
-    if($start === null)
-      return;
+        foreach ($this->ticks as $value) {
+            $pos = $this->position($value);
+            $position = $start + ($pos * $this->direction);
+            $points[] = $this->getGridPoint($position, $value);
+        }
 
-    $points = [];
-    foreach($this->ticks as $value) {
-      $pos = $this->position($value);
-      $position = $start + ($pos * $this->direction);
-      $points[] = $this->getGridPoint($position, $value);
+        if ($this->direction < 0) {
+            usort($points, static function ($a, $b) {
+                return $b->position - $a->position;
+            });
+        } else {
+            usort($points, static function ($a, $b) {
+                return $a->position - $b->position;
+            });
+        }
+
+        return $points;
     }
-
-    if($this->direction < 0) {
-      usort($points, function($a, $b) { return $b->position - $a->position; });
-    } else {
-      usort($points, function($a, $b) { return $a->position - $b->position; });
-    }
-
-    return $points;
-  }
 }
