@@ -137,7 +137,7 @@ class Number implements \Stringable
 
         $s = number_format(
             $n,
-            $d,
+            (int)$d,
             self::$decimal_separator,
             self::$thousands_separator,
         );
