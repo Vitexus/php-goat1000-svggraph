@@ -60,8 +60,6 @@ doc:
 	mkdir -p docs
 	mv .phpdoc/build/* docs
 
-test: phpunit
-
 composer:
 	composer update
 
