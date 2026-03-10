@@ -43,13 +43,13 @@ class Coords
             return false;
         }
 
-        $first = strtolower(substr($x, 0, 1));
+        $first = strtolower(substr((string)$x, 0, 1));
 
         if ($first === 'g') {
             return true;
         }
 
-        $first = strtolower(substr($y, 0, 1));
+        $first = strtolower(substr((string)$y, 0, 1));
 
         if ($first === 'g') {
             return true;
@@ -94,7 +94,7 @@ class Coords
         }
 
         $info['simple'] = false;
-        $first = strtolower(substr($value, 0, 1));
+        $first = strtolower(substr((string)$value, 0, 1));
 
         if ($first === 'u' || $first === 'g') {
             self::valueAxis($value, $axis, $axis_no);

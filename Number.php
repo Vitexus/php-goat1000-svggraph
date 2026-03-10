@@ -45,7 +45,7 @@ class Number implements \Stringable
         }
 
         if (!is_numeric($value)) {
-            throw new \Exception($value.' is not a number');
+            throw new \Exception((is_scalar($value) ? (string)$value : gettype($value)).' is not a number');
         }
 
         $this->value = $value;

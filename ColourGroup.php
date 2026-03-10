@@ -111,6 +111,7 @@ class ColourGroup
 
         if (!empty($colour)) {
             // get opacity / filters
+            $colour = (string)$colour;
             $spos = strpos($colour, '/');
 
             if ($spos !== false) {

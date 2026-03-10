@@ -259,7 +259,7 @@ class Text
     public function text($text, $line_spacing, $attribs, $styles = null)
     {
         // convert to UTF-8 for processing
-        $text = $this->convert($text);
+        $text = $this->convert((string)$text);
 
         // strip special characters
         $text = htmlspecialchars($text, \ENT_COMPAT, 'UTF-8');
@@ -415,6 +415,8 @@ class Text
             return 0;
         }
 
+        $text = (string)$text;
+
         if ($enc === null) {
             $enc = $this->encoding;
         }
@@ -440,6 +442,8 @@ class Text
      */
     public function strpos($text, $needle, $offset = 0, $enc = null)
     {
+        $text = (string)$text;
+
         if ($enc === null) {
             $enc = $this->encoding;
         }

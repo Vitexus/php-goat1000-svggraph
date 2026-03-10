@@ -47,7 +47,7 @@ class GradientList
                 // if this is a radial gradient, it must end with 'r'
                 $last = \count($colours) - 1;
 
-                if (\strlen($colours[$last]) === 1) {
+                if (\strlen((string)$colours[$last]) === 1) {
                     $colours[$last] = 'r';
                 } else {
                     $colours[] = 'r';
@@ -169,7 +169,7 @@ class GradientList
             $opacity = null;
             $poffset = $pos * $col_mul;
 
-            if (str_contains($colour, ':')) {
+            if (str_contains((string)$colour, ':')) {
                 // opacity, stop offset or both
                 $parts = explode(':', $colour);
 

@@ -1,3 +1,13 @@
+Version 3.21 (10/03/2026)
+------------
+- Fixed PHP 8+ strict type errors in string functions receiving non-string values.
+- Fixed str_replace() TypeError in tooltip handling when value is integer.
+- Fixed substr()/strtolower() TypeError in Coords when coordinates are numeric.
+- Fixed strlen()/strpos() TypeError in Text when measuring non-string values.
+- Fixed str_contains() TypeError in GradientList for numeric colour values.
+- Fixed strpos() TypeError in ColourGroup for non-string stroke colours.
+- Fixed exception message concatenation in Number for non-scalar values.
+
 Version 3.20 (24/04/2023)
 ------------
 - Added support for curved best-fit lines.

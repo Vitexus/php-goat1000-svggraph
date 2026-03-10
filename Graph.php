@@ -2033,7 +2033,7 @@ abstract class Graph
             return;
         }
 
-        $text = addslashes(str_replace("\n", '\n', $text));
+        $text = addslashes(str_replace("\n", '\n', (string)$text));
 
         return $this->getJavascript()->setTooltip($element, $text, $duplicate);
     }
