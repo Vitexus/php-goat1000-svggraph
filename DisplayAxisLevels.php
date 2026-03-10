@@ -67,7 +67,7 @@ class DisplayAxisLevels extends DisplayAxis
         $levels = $graph->getOption(['axis_levels_'.$orientation, $axis_no]);
 
         if (!\is_array($levels)) {
-            $levels = array_fill(0, $levels, null);
+            $levels = array_fill(0, (int) $levels, null);
         }
 
         $this->levels = $levels;

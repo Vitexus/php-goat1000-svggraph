@@ -184,7 +184,7 @@ trait StackedBarTrait
     {
         $style = parent::dataLabelStyle($dataset, $index, $item);
 
-        if (str_starts_with($dataset, 'total')) {
+        if (!is_numeric($dataset) && str_starts_with($dataset, 'total')) {
             // total settings can override label settings
             $simple = [
                 'font', 'font_size', 'font_weight', 'space', 'type', 'fill',

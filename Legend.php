@@ -241,17 +241,17 @@ class Legend
             );
         }
 
-        $columns = max(1, min(ceil($this->columns), $entry_count));
-        $per_column = ceil($entry_count / $columns);
-        $columns = ceil($entry_count / $per_column);
+        $columns = (int) max(1, min(ceil((float) $this->columns), $entry_count));
+        $per_column = (int) ceil($entry_count / $columns);
+        $columns = (int) ceil($entry_count / $per_column);
         $column = 0;
 
         $text = ['x' => 0];
 
         $column_entry = 0;
         $y = $start_y;
-        $text_columns = array_fill(0, $columns, '');
-        $entry_columns = array_fill(0, $columns, '');
+        $text_columns = array_fill(0, (int) $columns, '');
+        $entry_columns = array_fill(0, (int) $columns, '');
         $valid_entries = 0;
         $spacing = $this->graph->getOption('legend_spacing', 'legend_padding', 1);
         $entry_space = $this->graph->getOption(

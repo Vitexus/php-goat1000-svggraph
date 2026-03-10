@@ -448,6 +448,8 @@ class Javascript
 
     public static function reEscape($string)
     {
+        $string = (string) $string;
+
         // convert XML char entities to JS unicode
         $string = preg_replace_callback(
             '/&#x([a-f0-9]+);/',

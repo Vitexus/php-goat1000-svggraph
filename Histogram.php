@@ -169,7 +169,7 @@ class Histogram extends BarGraph
             $structure = ['key' => 0, 'value' => 1];
 
             if ($dataset !== 0) {
-                $structure['value'] = array_fill(0, $dataset, 2);
+                $structure['value'] = array_fill(0, (int) $dataset, 2);
                 $structure['value'][$dataset] = 1;
             }
 

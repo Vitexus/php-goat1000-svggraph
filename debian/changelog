@@ -1,4 +1,4 @@
-php-goat1000-svggraph (0.1.1) unstable; urgency=medium
+php-goat1000-svggraph (0.1.3) unstable; urgency=medium
 
   * Fix PHP 8+ strict type errors in string functions across the library:
     - Graph.php: str_replace() on non-string tooltip value
@@ -7,8 +7,10 @@ php-goat1000-svggraph (0.1.1) unstable; urgency=medium
     - GradientList.php: strlen()/str_contains() on numeric colour values
     - ColourGroup.php: strpos() on non-string stroke colour
     - Number.php: exception message for non-scalar values
+    - StackedBarTrait.php: str_starts_with() on non-string dataset
+    - Javascript.php: preg_replace_callback() on non-string value in reEscape()
 
- -- Vítězslav Dvořák <info@vitexsoftware.cz>  Tue, 10 Mar 2026 19:53:55 +0100
+ -- Vítězslav Dvořák <info@vitexsoftware.cz>  Tue, 10 Mar 2026 21:58:00 +0100
 
 php-goat1000-svggraph (0.1.0) unstable; urgency=low
 
